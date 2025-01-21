@@ -1,4 +1,4 @@
-import requests
+import requests, json
 
 OPENWEATHER_API_KEY = "49ed84e283efd82dfc2239cb5afd36c8"
 
