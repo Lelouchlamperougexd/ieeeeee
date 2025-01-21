@@ -1,0 +1,2 @@
+query, context, reference
+"How can I get from point A to point B faster right now?", "Traffic: 80% density, weather: rain", "Choose the route through street X, considering traffic and rain."
