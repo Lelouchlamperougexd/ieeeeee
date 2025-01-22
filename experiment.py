@@ -1,10 +1,12 @@
 # import openai
 import pandas as pd
+from apis.weather_api import get_weather_data
+from apis.traffic_api import get_traffic_data
 from models.model_utils import load_t5_model, load_bart_model
 from models.inference import inference_with_time
 from metrics.bleu_rouge import calculate_bleu, calculate_rouge
 
-# Установите API ключ для OpenAI GPT-3
+# API GPT-3
 # openai.api_key = 'your-openai-api-key'
 
 # def generate_response_openai(prompt):
@@ -16,35 +18,38 @@ from metrics.bleu_rouge import calculate_bleu, calculate_rouge
 #     )
 #     return response['choices'][0]['text'].strip()
 
-def run_experiment():
-    # Загрузка моделей
+def run_experiment(location="Astana"):
+    """Run the full experiment with weather and traffic data."""
+    # Fetch context data
+    weather_context = get_weather_data(location)
+    traffic_context = get_traffic_data(location)
+
+    # Generate enriched queries
+    query = f"How can I get from A to B? Context: {traffic_context}; {weather_context}."
+    reference = "The best route is through XYZ, avoiding heavy traffic."
+
+    # Load models
     model_t5, tokenizer_t5 = load_t5_model()
     model_bart, tokenizer_bart = load_bart_model()
 
-    # Тестовые данные (например, запрос)
-    query = "How can I get from point A to point B faster right now?"
-    reference = "The best route is through XYZ, considering traffic."
-
-
-    # Получение ответа для каждой модели
+    # Generate responses
     response_t5, time_t5 = inference_with_time(model_t5, tokenizer_t5, query)
     response_bart, time_bart = inference_with_time(model_bart, tokenizer_bart, query)
     # response_openai = generate_response_openai(query)
 
-    # Оценка качества
-    bleu_score_t5 = calculate_bleu(reference, response_t5)
-    bleu_score_bart = calculate_bleu(reference, response_bart)
-    # bleu_score_openai = calculate_bleu(reference, response_openai)
+    # Evaluate results
+    bleu_t5 = calculate_bleu(reference, response_t5)
+    bleu_bart = calculate_bleu(reference, response_bart)
+    # bleu_openai = calculate_bleu(reference, response_openai)
 
-    rouge_score_t5 = calculate_rouge(reference, response_t5)
-    rouge_score_bart = calculate_rouge(reference, response_bart)
-    # rouge_score_openai = calculate_rouge(reference, response_openai)
+    rouge_t5 = calculate_rouge(reference, response_t5)
+    rouge_bart = calculate_rouge(reference, response_bart)
+    # rouge_openai = calculate_rouge(reference, response_openai)
 
-    # Результаты
-    print(f"Response from T5: {response_t5} | Time: {time_t5:.4f}s | BLEU: {bleu_score_t5:.4f} | ROUGE: {rouge_score_t5}")
-    print(f"Response from BART: {response_bart} | Time: {time_bart:.4f}s | BLEU: {bleu_score_bart:.4f} | ROUGE: {rouge_score_bart}")
-    # print(f"Response from OpenAI: {response_openai} | Time: N/A | BLEU: {bleu_score_openai:.4f} | ROUGE: {rouge_score_openai}")
-
+    # Print results
+    print(f"T5 Response: {response_t5} | Time: {time_t5:.4f}s | BLEU: {bleu_t5:.4f} | ROUGE: {rouge_t5}")
+    print(f"BART Response: {response_bart} | Time: {time_bart:.4f}s | BLEU: {bleu_bart:.4f} | ROUGE: {rouge_bart}")
+    # print(f"OpenAI GPT-3 Response: {response_openai} | BLEU: {bleu_openai:.4f} | ROUGE: {rouge_openai}")
 
 if __name__ == "__main__":
-    run_experiment()
+    run_experiment(location="Astana")
